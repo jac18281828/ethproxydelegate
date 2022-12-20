@@ -1,26 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.15;
 
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+
 import "../contracts/Store.sol";
-import "../contracts/StoreNumber.sol";
 
-contract StorageService {
-    // delegate
-    StoreNumber private _number;
+contract StorageService is Initializable, Store {
+    mapping(address => int256) public _number;
 
-    constructor() {
-        _number = new StoreNumber(0);
+    function initialize() public initializer {}
+
+    function set(int256 value) public {
+        _number[msg.sender] = value;
     }
 
-    function set(uint256 value) public {
-        _number.set(value);
-    }
-
-    function get() public view returns (uint256) {
-        return _number.get();
-    }
-
-    function getStore() public view returns (Store) {
-        return _number;
+    function get() public view returns (int256) {
+        return _number[msg.sender];
     }
 }

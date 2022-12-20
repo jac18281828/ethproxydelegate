@@ -5,6 +5,8 @@ import "forge-std/Test.sol";
 import "../contracts/StorageService.sol";
 
 contract StorageServiceTest is Test {
+    address private constant _OTHER = address(0xfff);
+
     StorageService private _service;
 
     function setUp() public {
@@ -16,8 +18,11 @@ contract StorageServiceTest is Test {
         assertEq(_service.get(), 200);
     }
 
-    function testFailSetInternalStore() public {
-        Store _store = _service.getStore();
-        _store.set(128);
+    function testSetOther() public {
+        vm.prank(_OTHER, _OTHER);
+        _service.set(0x22);
+        assertEq(_service.get(), 0);
+        vm.prank(_OTHER, _OTHER);
+        assertEq(_service.get(), 0x22);
     }
 }
