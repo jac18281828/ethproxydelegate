@@ -4,6 +4,7 @@ pragma solidity ^0.8.15;
 import "forge-std/Test.sol";
 import "../contracts/Store.sol";
 import "../contracts/NumberStore.sol";
+import "../contracts/StructuredStore.sol";
 import "../contracts/StorageProxy.sol";
 
 contract StorageProxyTest is Test {
@@ -14,8 +15,10 @@ contract StorageProxyTest is Test {
 
     function setUp() public {
         StorageService _storage = new StorageService();
-        _proxy = new StorageProxy(address(_storage));
-        _store = StorageService(_proxy.implementation());
+        StructuredStore _eternalStore = new StructuredStore();
+        _proxy = new StorageProxy(address(_storage), address(_eternalStore));
+        _eternalStore.transferOwnership(address(_proxy));
+        _store = StorageService(address(_proxy));
     }
 
     function testSet() public {
@@ -39,8 +42,9 @@ contract StorageProxyTest is Test {
         _store.set(0x22);
         Store _ustore = new BizaroStorageService();
         _proxy.upgrade(address(_ustore));
-        _store = StorageService(_proxy.implementation());
         vm.startPrank(_OTHER, _OTHER);
+        // set previously - still set (eternal storage)
+        assertEq(_store.get(), 0x22);
         _store.set(0x22);
         assertEq(_store.get(), -34);
         vm.stopPrank();
@@ -51,7 +55,6 @@ contract StorageProxyTest is Test {
         _store.set(0x22);
         Store _ustore = new UpgradeService();
         _proxy.upgrade(address(_ustore));
-        _store = StorageService(_proxy.implementation());
         vm.startPrank(_OTHER, _OTHER);
         _store.set(0x23);
         assertEq(_store.get(), 35);
@@ -62,13 +65,12 @@ contract StorageProxyTest is Test {
 // recreational purposes only - sets value to negative of value
 contract BizaroStorageService is StorageService {
     function set(int256 value) public override {
-        _number[msg.sender] = new NumberStore(-value);
+        _store.set(-value, msg.sender);
     }
 }
 
 contract UpgradeService is StorageService {
     function getStore() public view returns (Store) {
-        if (address(_number[msg.sender]) == address(0x0)) revert NotInitialized(msg.sender);
-        return _number[msg.sender];
+        return this;
     }
 }

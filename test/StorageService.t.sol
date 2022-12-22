@@ -3,6 +3,7 @@ pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 import "../contracts/StorageService.sol";
+import "../contracts/StructuredStore.sol";
 
 contract StorageServiceTest is Test {
     address private constant _OTHER = address(0xfff);
@@ -11,6 +12,9 @@ contract StorageServiceTest is Test {
 
     function setUp() public {
         _service = new StorageService();
+        StructuredStore _store = new StructuredStore();
+        _store.transferOwnership(address(_service));
+        _service.initialize(address(_store), address(this));
     }
 
     function testSet() public {

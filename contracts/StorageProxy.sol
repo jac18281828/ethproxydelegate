@@ -4,17 +4,18 @@ pragma solidity ^0.8.15;
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import "../contracts/StorageService.sol";
+import "../contracts/StructuredStore.sol";
 
 contract StorageProxy is ERC1967Proxy {
-    constructor(address _sImplementation)
-        ERC1967Proxy(_sImplementation, abi.encodeWithSelector(StorageService(address(0)).initialize.selector))
-    {}
+    address internal immutable _storeAddr;
 
-    function implementation() public view returns (address) {
-        return _implementation();
+    constructor(address _sImplementation, address _store)
+        ERC1967Proxy(_sImplementation, abi.encodeWithSelector(StorageService.initialize.selector, _store, address(this)))
+    {
+        _storeAddr = _store;
     }
 
     function upgrade(address _sImplementation) public {
-        _upgradeToAndCallUUPS(_sImplementation, "", false);
+        _upgradeTo(_sImplementation);
     }
 }
