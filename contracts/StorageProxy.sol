@@ -1,27 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.15;
 
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import "../contracts/StorageService.sol";
 
-contract StorageProxy is Ownable {
-    TransparentUpgradeableProxy private immutable proxy;
+contract StorageProxy is ERC1967Proxy {
+    constructor(address _sImplementation)
+        ERC1967Proxy(_sImplementation, abi.encodeWithSelector(StorageService(address(0)).initialize.selector))
+    {}
 
-    constructor(address _sImplementation) {
-        proxy = new TransparentUpgradeableProxy(
-            _sImplementation,
-            address(this),
-            abi.encodeWithSelector(StorageService(address(0)).initialize.selector)
-        );
+    function implementation() public view returns (address) {
+        return _implementation();
     }
 
-    function upgrade(address _sImplementation) public onlyOwner {
-        proxy.upgradeTo(_sImplementation);
-    }
-
-    function implementation() public returns (address) {
-        return proxy.implementation();
+    function upgrade(address _sImplementation) public {
+        _upgradeToAndCallUUPS(_sImplementation, "", false);
     }
 }

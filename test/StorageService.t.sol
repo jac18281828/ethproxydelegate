@@ -21,8 +21,11 @@ contract StorageServiceTest is Test {
     function testSetOther() public {
         vm.prank(_OTHER, _OTHER);
         _service.set(0x22);
-        assertEq(_service.get(), 0);
         vm.prank(_OTHER, _OTHER);
         assertEq(_service.get(), 0x22);
+    }
+
+    function testFailNotSet() public view {
+        _service.get();
     }
 }

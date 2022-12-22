@@ -3,18 +3,19 @@ pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 import "../contracts/Store.sol";
+import "../contracts/NumberStore.sol";
 import "../contracts/StorageProxy.sol";
 
 contract StorageProxyTest is Test {
     address private constant _OTHER = address(0xfff);
 
     StorageProxy private _proxy;
-    Store private _store;
+    StorageService private _store;
 
     function setUp() public {
         StorageService _storage = new StorageService();
         _proxy = new StorageProxy(address(_storage));
-        _store = Store(_proxy.implementation());
+        _store = StorageService(_proxy.implementation());
     }
 
     function testSet() public {
@@ -25,33 +26,49 @@ contract StorageProxyTest is Test {
     function testSetOther() public {
         vm.prank(_OTHER, _OTHER);
         _store.set(0x22);
-        assertEq(_store.get(), 0);
         vm.prank(_OTHER, _OTHER);
         assertEq(_store.get(), 0x22);
     }
 
+    function testFailNotSet() public view {
+        _store.get();
+    }
+
     function testUpgrade() public {
-        Store _ustore = new BizaroStorageService();
-        _proxy.upgrade(address(_ustore));
-        _store = Store(_proxy.implementation());
         vm.prank(_OTHER, _OTHER);
         _store.set(0x22);
-        vm.prank(_OTHER, _OTHER);
+        Store _ustore = new BizaroStorageService();
+        _proxy.upgrade(address(_ustore));
+        _store = StorageService(_proxy.implementation());
+        vm.startPrank(_OTHER, _OTHER);
+        _store.set(0x22);
         assertEq(_store.get(), -34);
+        vm.stopPrank();
+    }
+
+    function testUpgradeKeepsDataAndOwner() public {
+        vm.prank(_OTHER, _OTHER);
+        _store.set(0x22);
+        Store _ustore = new UpgradeService();
+        _proxy.upgrade(address(_ustore));
+        _store = StorageService(_proxy.implementation());
+        vm.startPrank(_OTHER, _OTHER);
+        _store.set(0x23);
+        assertEq(_store.get(), 35);
+        vm.stopPrank();
     }
 }
 
 // recreational purposes only - sets value to negative of value
-contract BizaroStorageService is Initializable, Store {
-    mapping(address => int256) public _number;
-
-    function initialize() public initializer {}
-
-    function set(int256 value) public {
-        _number[msg.sender] = -value;
+contract BizaroStorageService is StorageService {
+    function set(int256 value) public override {
+        _number[msg.sender] = new NumberStore(-value);
     }
+}
 
-    function get() public view returns (int256) {
+contract UpgradeService is StorageService {
+    function getStore() public view returns (Store) {
+        if (address(_number[msg.sender]) == address(0x0)) revert NotInitialized(msg.sender);
         return _number[msg.sender];
     }
 }
