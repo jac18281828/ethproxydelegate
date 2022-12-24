@@ -3,24 +3,19 @@ pragma solidity ^0.8.15;
 
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "../contracts/StructuredStore.sol";
+import "../contracts/OwnableInitializable.sol";
 
 /// @notice upgradeable storage service
-contract StorageService is Store, UUPSUpgradeable, Initializable {
-    error NotOwner(address sender);
-
+contract StorageService is Store, UUPSUpgradeable, Initializable, OwnableInitializable {
+    event UpgradeAuthorized(address sender, address owner);
     StructuredStore internal _store;
-    address private _owner;
-
-    modifier onlyOwner() {
-        if (_owner != address(0x0) && msg.sender != _owner) revert NotOwner(msg.sender);
-        _;
-    }
 
     function initialize(address _storeaddr, address _ownerAddr) public initializer {
         _store = StructuredStore(_storeaddr);
-        _owner = _ownerAddr;
+        ownerInitialize(_ownerAddr);
     }
 
     function set(int256 value) public virtual {
@@ -31,5 +26,8 @@ contract StorageService is Store, UUPSUpgradeable, Initializable {
         return _store.get(msg.sender);
     }
 
-    function _authorizeUpgrade(address) internal virtual override(UUPSUpgradeable) onlyOwner {}
+    // solhint-disable-next-line no-empty-blocks
+    function _authorizeUpgrade(address _caller) internal virtual override(UUPSUpgradeable) onlyOwner {
+        emit UpgradeAuthorized(_caller, owner());
+    }
 }
