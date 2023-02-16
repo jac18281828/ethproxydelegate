@@ -9,7 +9,7 @@ import "../contracts/StructuredStore.sol";
 import "../contracts/OwnableInitializable.sol";
 
 /// @notice upgradeable storage service
-contract StorageService is Store, UUPSUpgradeable, Initializable, OwnableInitializable {
+contract StorageService is ProxyableStore, UUPSUpgradeable, Initializable, OwnableInitializable {
     event UpgradeAuthorized(address sender, address owner);
     StructuredStore internal _store;
 
@@ -26,7 +26,6 @@ contract StorageService is Store, UUPSUpgradeable, Initializable, OwnableInitial
         return _store.get(msg.sender);
     }
 
-    // solhint-disable-next-line no-empty-blocks
     function _authorizeUpgrade(address _caller) internal virtual override(UUPSUpgradeable) onlyOwner {
         emit UpgradeAuthorized(_caller, owner());
     }

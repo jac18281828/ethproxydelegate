@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.15;
 
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import "forge-std/Test.sol";
 
-import "../contracts/Store.sol";
 import "../contracts/NumberStore.sol";
 import "../contracts/StructuredStore.sol";
 import "../contracts/StorageProxy.sol";
+import "../contracts/Store.sol";
+import "../contracts/StorageService.sol";
 
 contract StorageProxyTest is Test {
     address private constant _OTHER = address(0xffff);

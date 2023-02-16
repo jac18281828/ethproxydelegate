@@ -10,5 +10,5 @@ ENV PATH=${PATH}:~/.cargo/bin
 RUN yarn install --dev
 RUN yarn prettier:check
 RUN yarn hint
-RUN forge test -vvv --gas-report
+RUN forge test -vvv 
 

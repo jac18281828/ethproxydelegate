@@ -6,3 +6,7 @@ interface Store {
 
     function get() external view returns (int256);
 }
+
+interface ProxyableStore is Store {
+    function initialize(address _storeaddr, address _ownerAddr) external;
+}

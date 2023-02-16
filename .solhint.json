@@ -14,10 +14,6 @@
       {
         "ignoreConstructors": true
       }
-    ],
-    "prettier/prettier": "error"
-  },
-  "plugins": [
-    "prettier"
-  ]
+    ]
+  }
 }
